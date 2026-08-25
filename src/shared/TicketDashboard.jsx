@@ -150,7 +150,9 @@ const TicketDashboard = () => {
       showNotification("Ticket created successfully!", "success");
     } catch (error) {
       console.error("Creation error:", error);
-      const msg = error.response?.data?.message || "Failed to create ticket";
+      const msg = error.response?.data?.message || (error.response
+        ? "Failed to create ticket"
+        : "Could not reach the API. Check that the backend is online and allows requests from this website.");
       showNotification(msg, "error");
     } finally {
       setSubmitLoading(false);

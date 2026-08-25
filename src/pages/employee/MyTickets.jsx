@@ -92,6 +92,8 @@ const EmployeeTickets = () => {
       const validationErrors = error.response?.data?.errors;
       if (validationErrors && validationErrors.length > 0) {
         showNotification(`Validation Error: ${validationErrors[0].message}`, "error");
+      } else if (!error.response) {
+        showNotification('Could not reach the API. Check that the backend is online and allows requests from this website.', "error");
       } else {
         const msg = error.response?.data?.message || "Failed to create ticket";
         showNotification(msg, "error");

@@ -40,7 +40,7 @@ const TicketDirectory = () => {
   // Upgraded Error Parser
   const parseBackendError = (error, defaultMessage) => {
     if (!error.response) {
-      return `Network Error: ${error.message}. Is the backend running?`;
+      return 'Could not reach the API. Check that the backend is online and allows requests from this website.';
     }
     
     const data = error.response.data;
@@ -113,7 +113,7 @@ const TicketDirectory = () => {
       showNotification("Ticket created successfully!", "success");
     } catch (error) {
       const errorMessage = parseBackendError(error, "Failed to create ticket.");
-      showNotification(`Validation Error: ${errorMessage}`, "error");
+      showNotification(error.response ? `Validation Error: ${errorMessage}` : errorMessage, "error");
     } finally {
       setCreateLoading(false);
     }

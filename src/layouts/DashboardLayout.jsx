@@ -79,7 +79,6 @@ const DashboardLayout = ({ allowedRoles }) => {
 
           <Link to={isAdmin ? '/admin' : '/employee'} className="brand-lockup" onClick={closeMobileMenu}>
             <img src={logo} alt="Nexoratel" />
-            <span><strong>Nexoratel</strong><small>Operations workspace</small></span>
           </Link>
         </div>
         
@@ -121,10 +120,9 @@ const DashboardLayout = ({ allowedRoles }) => {
           
           {/* LEFT HEADER AREA: Mobile Logo */}
           <div className="flex items-center flex-1 min-w-0">
-            <div className="mobile-brand md:hidden">
+            <Link to={isAdmin ? '/admin' : '/employee'} className="mobile-brand md:hidden" aria-label="Nexoratel home">
               <img src={logo} alt="Nexoratel" />
-              <span>Nexoratel</span>
-            </div>
+            </Link>
             <div className="hidden md:block min-w-0">
               <p className="topnav-eyebrow">{isAdmin ? 'Administration' : 'Employee workspace'}</p>
               <p className="topnav-title">{navLinks.find((link) => link.path === location.pathname)?.label || 'Workspace'}</p>

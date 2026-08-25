@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useAxios from '../../hooks/useAxios';
-import { UserPlus, Shield, ShieldOff, Trash2, Mail, Briefcase, X, AlertCircle } from 'lucide-react';
+import { UserPlus, Shield, ShieldOff, Trash2, Mail, Briefcase, X, AlertCircle, Users, UserCheck, UserX, Sparkles } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 
 const UserManagement = () => {
@@ -8,6 +8,7 @@ const UserManagement = () => {
   const { showNotification } = useNotification();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const mutationVersion = useRef(0);
   
   // Keeps track of which user is currently being updated so we can disable their buttons
   const [processingId, setProcessingId] = useState(null);
@@ -29,6 +30,7 @@ const UserManagement = () => {
   const [userToDelete, setUserToDelete] = useState(null);
 
   const fetchUsers = async () => {
+    const versionAtRequest = mutationVersion.current;
     try {
       const response = await api.get('/api/admin/users');
       const raw = response.data;
@@ -46,16 +48,20 @@ const UserManagement = () => {
           if (arrayKey) extractedUsers = raw[arrayKey];
         }
       }
-      setUsers(extractedUsers);
+      const normalizedUsers = extractedUsers.map((user) => ({
+        ...user,
+        status: String(user.accountStatus || user.status || 'ACTIVE').toUpperCase(),
+      }));
+      if (versionAtRequest === mutationVersion.current) setUsers(normalizedUsers);
     } catch (error) {
       console.error("Failed to fetch users", error);
-      setUsers([]);
+      if (versionAtRequest === mutationVersion.current) setUsers([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Empty dependency array guarantees this NEVER runs accidentally on re-renders!
+  // Load the directory when the page mounts.
   useEffect(() => {
     fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,11 +84,14 @@ const UserManagement = () => {
     const targetStatus = action === 'activate' ? 'ACTIVE' : 'INACTIVE';
 
     try {
-      await api.patch(`/api/admin/users/${id}/status`, { action: action });
+      const response = await api.patch(`/api/admin/users/${id}/status`, { action });
+      mutationVersion.current += 1;
+      const updatedUser = response.data?.data?.user || response.data?.user;
+      const confirmedStatus = String(updatedUser?.accountStatus || updatedUser?.status || targetStatus).toUpperCase();
       
       // Update local state smoothly. No background fetch to mess it up.
       setUsers(prev => prev.map(user => 
-        user.id === id ? { ...user, status: targetStatus } : user
+        user.id === id ? { ...user, ...updatedUser, status: confirmedStatus, accountStatus: confirmedStatus } : user
       ));
 
       showNotification(`User account ${action}d successfully`, "success"); 
@@ -126,7 +135,7 @@ const UserManagement = () => {
 
       if (newlyCreatedUser) {
          // Map the backend 'accountStatus' to 'status' so the table reads it correctly
-         newlyCreatedUser.status = newlyCreatedUser.accountStatus || 'ACTIVE';
+         newlyCreatedUser.status = String(newlyCreatedUser.accountStatus || newlyCreatedUser.status || 'ACTIVE').toUpperCase();
          setUsers(prev => [...prev, newlyCreatedUser]);
       } else {
          // Safe fallback: if we can't extract it, just refetch the whole list
@@ -155,7 +164,7 @@ const UserManagement = () => {
   // ==========================================
   if (loading) {
     return (
-      <div className="space-y-6 relative">
+      <div className="dashboard-shell animate-pulse">
         {/* Header Skeleton */}
         <div className="flex justify-between items-end">
           <div>
@@ -215,23 +224,38 @@ const UserManagement = () => {
     );
   }
 
-  return (
-    <div className="space-y-6 relative">
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">User Management</h1>
-          <p className="text-gray-500 mt-1">Manage employee access, roles, and system permissions.</p>
-        </div>
-        <button 
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-sm"
-        >
-          <UserPlus size={18} />
-          <span>New User</span>
-        </button>
-      </div>
+  const activeUsers = users.filter((user) => String(user.accountStatus || user.status || 'ACTIVE').toUpperCase() === 'ACTIVE');
+  const blockedUsers = users.filter((user) => String(user.accountStatus || user.status || 'ACTIVE').toUpperCase() !== 'ACTIVE');
+  const adminUsers = users.filter((user) => String(user.role || '').toUpperCase() === 'ADMIN');
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+  return (
+    <div className="dashboard-shell user-management-shell">
+      <section className="dashboard-hero user-management-hero">
+        <div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/>
+        <div className="relative z-10 flex w-full flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="eyebrow"><Sparkles size={14}/> People and access</div>
+            <h1>Build and protect your team.</h1>
+            <p>Manage employee access, roles, departments, and account availability from one clear workspace.</p>
+          </div>
+          <button onClick={() => setIsCreateModalOpen(true)} className="hero-button">
+            <UserPlus size={18}/><span>Add new user</span>
+          </button>
+        </div>
+      </section>
+
+      <section className="metric-grid">
+        <UserMetric icon={Users} label="Total people" value={users.length} note="All workspace accounts" tone="violet" />
+        <UserMetric icon={UserCheck} label="Active access" value={activeUsers.length} note="Can access the workspace" tone="green" />
+        <UserMetric icon={UserX} label="Blocked access" value={blockedUsers.length} note="Currently locked out" tone="orange" />
+        <UserMetric icon={Shield} label="Administrators" value={adminUsers.length} note="Elevated permissions" tone="blue" />
+      </section>
+
+      <div className="user-directory-panel">
+        <div className="user-directory-heading">
+          <div><span className="panel-kicker">Team directory</span><h2>Workspace accounts</h2></div>
+          <span>{users.length} {users.length === 1 ? 'person' : 'people'}</span>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
@@ -247,7 +271,7 @@ const UserManagement = () => {
                 <tr><td colSpan="4" className="px-6 py-8 text-center">No users found.</td></tr>
               ) : (
                 users.map((user) => {
-                  const displayStatus = String(user.status || 'ACTIVE').toUpperCase();
+                  const displayStatus = String(user.accountStatus || user.status || 'ACTIVE').toUpperCase();
                   const isUserActive = displayStatus === 'ACTIVE';
                   const isProcessing = processingId === user.id; // Check if this specific user is updating
 
@@ -428,5 +452,12 @@ const UserManagement = () => {
     </div>
   );
 };
+
+const UserMetric = ({ icon: Icon, label, value, note, tone }) => (
+  <article className={`metric-card tone-${tone}`}>
+    <div className="metric-icon"><Icon size={21}/></div>
+    <div><span>{label}</span><strong>{value}</strong><small>{note}</small></div>
+  </article>
+);
 
 export default UserManagement;
