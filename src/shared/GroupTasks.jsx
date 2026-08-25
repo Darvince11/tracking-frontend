@@ -166,13 +166,13 @@ const GroupTasks = () => {
 
       {/* Create Group Task Modal (Admin Only) */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-              <h3 className="font-bold text-lg text-gray-900 dark:text-white">Create Group Milestone</h3>
+        <div className="ticket-modal-backdrop">
+          <div className="ticket-modal-card w-full max-w-lg">
+            <div className="ticket-modal-header">
+              <div><span>Collaborative milestone</span><h3>Create Group Task</h3><p>Describe the shared goal and bring the right people together.</p></div>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
-            <form onSubmit={handleCreateTask} className="p-6 space-y-4">
+            <form onSubmit={handleCreateTask} className="ticket-modal-form">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Task Title</label>
                 <input 
@@ -209,7 +209,7 @@ const GroupTasks = () => {
                   ))}
                 </div>
               </div>
-              <div className="pt-4 flex justify-end gap-3 border-t dark:border-gray-700 mt-6">
+              <div className="ticket-modal-actions">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-gray-600 dark:text-gray-300 rounded-lg font-medium">Cancel</button>
                 <button type="submit" disabled={submitLoading} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium disabled:opacity-50">
                   {submitLoading ? 'Creating...' : 'Create Milestone'}

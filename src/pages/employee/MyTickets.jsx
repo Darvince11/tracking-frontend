@@ -204,16 +204,16 @@ const EmployeeTickets = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-              <h3 className="font-bold text-lg text-gray-900 dark:text-white">Create New Ticket</h3>
+        <div className="ticket-modal-backdrop">
+          <div className="ticket-modal-card w-full max-w-lg">
+            <div className="ticket-modal-header">
+              <div><span>New workflow item</span><h3>Create New Ticket</h3><p>Add the details your team needs to begin.</p></div>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                 <X size={20} />
               </button>
             </div>
             
-            <form onSubmit={handleCreateTicket} className="p-6 space-y-4">
+            <form onSubmit={handleCreateTicket} className="ticket-modal-form">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ticket Title</label>
                 <input 
@@ -252,7 +252,7 @@ const EmployeeTickets = () => {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="ticket-form-grid">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
                   <select 
@@ -279,7 +279,7 @@ const EmployeeTickets = () => {
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t dark:border-gray-800 mt-6">
+              <div className="ticket-modal-actions">
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)} 

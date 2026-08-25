@@ -376,14 +376,14 @@ const TicketDirectory = () => {
 
       {/* ADMIN CREATE TICKET MODAL */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-              <h3 className="font-bold text-lg text-gray-900 dark:text-white">Create New Ticket</h3>
+        <div className="ticket-modal-backdrop">
+          <div className="ticket-modal-card w-full max-w-2xl">
+            <div className="ticket-modal-header">
+              <div><span>New workflow item</span><h3>Create New Ticket</h3><p>Capture the work clearly and assign it to the right team.</p></div>
               <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X size={20}/></button>
             </div>
             
-            <form onSubmit={handleCreateTicket} className="p-6 space-y-4">
+            <form onSubmit={handleCreateTicket} className="ticket-modal-form">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ticket Title</label>
                 <input 
@@ -405,7 +405,7 @@ const TicketDirectory = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="ticket-form-grid">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
                   <select 
@@ -430,7 +430,7 @@ const TicketDirectory = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="ticket-form-grid">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department</label>
                   <select 
@@ -466,7 +466,7 @@ const TicketDirectory = () => {
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700 mt-6">
+              <div className="ticket-modal-actions">
                 <button 
                   type="button" onClick={() => setIsCreateModalOpen(false)}
                   className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors"
