@@ -10,6 +10,7 @@ const GroupTasks = () => {
   const { showNotification } = useNotification();
 
   const [tasks, setTasks] = useState([]);
+  const [expandedTaskIds, setExpandedTaskIds] = useState(() => new Set());
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -103,6 +104,15 @@ const GroupTasks = () => {
     });
   };
 
+  const toggleDescription = (taskId) => {
+    setExpandedTaskIds((current) => {
+      const next = new Set(current);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  };
+
   if (loading) {
     return <div className="dashboard-shell animate-pulse"><div className="h-64 rounded-[2rem] bg-slate-200 dark:bg-slate-800"/><div className="grid grid-cols-1 gap-5 md:grid-cols-2"><div className="h-64 rounded-3xl bg-slate-200 dark:bg-slate-800"/><div className="h-64 rounded-3xl bg-slate-200 dark:bg-slate-800"/></div></div>;
   }
@@ -139,7 +149,12 @@ const GroupTasks = () => {
                     </button>
                   )}
                 </div>
-                <p className="group-task-description">{task.description}</p>
+                <p className={`group-task-description ${expandedTaskIds.has(task.id) ? 'expanded' : ''}`}>{task.description}</p>
+                {String(task.description || '').length > 180 && (
+                  <button type="button" className="group-task-read-more" onClick={() => toggleDescription(task.id)}>
+                    {expandedTaskIds.has(task.id) ? 'Show less' : 'Read more'}
+                  </button>
+                )}
               </div>
 
               <div className="group-task-members">

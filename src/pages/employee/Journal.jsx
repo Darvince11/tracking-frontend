@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import useAxios from '../../hooks/useAxios';
 import { useNotification } from '../../context/NotificationContext';
-import { FileText, Send, ArrowLeft, Clock3 } from 'lucide-react';
+import { FileText, Send, ArrowLeft, Clock3, Sparkles, BookOpen } from 'lucide-react';
 
 const EmployeeJournalPage = () => {
   const api = useAxios();
@@ -79,19 +79,20 @@ const EmployeeJournalPage = () => {
   const sortedLogs = useMemo(() => [...logs].sort((a, b) => new Date(b.logDate || b.createdAt || 0) - new Date(a.logDate || a.createdAt || 0)), [logs]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
+    <div className="dashboard-shell journal-shell">
+      <section className="dashboard-hero journal-hero"><div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/><div className="relative z-10 flex w-full flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Daily Journal</h1>
-          <p className="text-gray-500 mt-1">Capture your progress and keep a personal record of your work.</p>
+          <div className="eyebrow"><Sparkles size={14}/> Your work story</div><h1>Daily journal.</h1><p>Capture progress, decisions, and meaningful context while the work is still fresh.</p>
         </div>
-        <Link to="/employee" className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+        <Link to="/employee" className="glass-button">
           <ArrowLeft size={16} /> Back to dashboard
         </Link>
-      </div>
+      </div></section>
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-[#1a1d27]">
+      <section className="journal-summary"><div><BookOpen size={18}/><span>Entries recorded<strong>{sortedLogs.length}</strong></span></div><div><Clock3 size={18}/><span>Open tickets<strong>{tickets.filter((ticket) => ticket.status !== 'COMPLETED').length}</strong></span></div></section>
+
+      <div className="journal-workspace-grid">
+        <div className="journal-composer-card">
           <div className="mb-4 flex items-center gap-2">
             <FileText size={18} className="text-indigo-500" />
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">New Entry</h2>
@@ -136,7 +137,7 @@ const EmployeeJournalPage = () => {
           </form>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-[#1a1d27]">
+        <div className="journal-timeline-card">
           <div className="mb-4 flex items-center gap-2">
             <Clock3 size={18} className="text-emerald-500" />
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Entries</h2>
@@ -155,7 +156,7 @@ const EmployeeJournalPage = () => {
           ) : (
             <div className="space-y-3">
               {sortedLogs.map((log) => (
-                <div key={log.id} className="rounded-lg border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/40">
+                <div key={log.id} className="journal-timeline-entry">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <span className="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
                       {log.ticket?.trackingNumber || 'General'}

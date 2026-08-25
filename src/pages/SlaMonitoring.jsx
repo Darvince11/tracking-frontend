@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import useAxios from '../hooks/useAxios';
 import { useNotification } from '../context/NotificationContext';
-import { AlertTriangle, ShieldCheck, Timer, CheckCircle } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, Timer, CheckCircle, Sparkles } from 'lucide-react';
 import SLATimer from '../components/SLATimer';
 
 const SlaMonitoring = () => {
@@ -97,48 +97,41 @@ const SlaMonitoring = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">SLA Monitoring</h1>
-        <p className="text-gray-500 mt-1">Track response times, service level agreements, and breached deadlines.</p>
-      </div>
+    <div className="dashboard-shell sla-shell">
+      <section className="dashboard-hero sla-hero"><div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/><div className="relative z-10"><div className="eyebrow"><Sparkles size={14}/> Service assurance center</div><h1>Stay ahead of every deadline.</h1><p>Monitor live response windows, surface breached commitments, and keep delivery operating within target.</p></div></section>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-[#1a1d27] p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 flex items-center gap-4">
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl">
+      <div className="metric-grid sla-metric-grid">
+        <div className="metric-card tone-blue">
+          <div className="metric-icon">
             <Timer size={24} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-500">Monitored Tasks</p>
-            <h3 className="text-2xl font-black text-gray-900 dark:text-white mt-1">{metrics.totalMonitored || 0}</h3>
+            <span>Monitored tasks</span><strong>{metrics.totalMonitored || 0}</strong><small>Live service commitments</small>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1a1d27] p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 flex items-center gap-4">
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-xl">
+        <div className="metric-card tone-green">
+          <div className="metric-icon">
             <ShieldCheck size={24} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-500">Compliance Rate</p>
-            <h3 className="text-2xl font-black text-gray-900 dark:text-white mt-1">{metrics.complianceRate ?? 100}%</h3>
+            <span>Compliance rate</span><strong>{metrics.complianceRate ?? 100}%</strong><small>Within agreed response time</small>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1a1d27] p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 flex items-center gap-4">
-          <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 rounded-xl">
+        <div className="metric-card tone-orange">
+          <div className="metric-icon">
             <AlertTriangle size={24} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-500">Active Breaches</p>
-            {/* Now uses the guaranteed full list of breaches */}
-            <h3 className="text-2xl font-black text-gray-900 dark:text-white mt-1">{finalBreachesList.length}</h3>
+            <span>Active breaches</span><strong>{finalBreachesList.length}</strong><small>Require immediate attention</small>
           </div>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-[#1a1d27] rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 space-y-6">
+      <div className="sla-control-panel">
         
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white">SLA Breaches & Overdue Tickets</h2>
+        <div className="panel-heading"><div><span className="panel-kicker">Escalation queue</span><h2>SLA breaches & overdue tickets</h2></div><span className="sla-count">{finalBreachesList.length} active</span></div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import useAxios from '../../hooks/useAxios';
-import { Search, AlertCircle, Clock, Plus, X, Edit, Trash2, Activity } from 'lucide-react';
+import { Search, AlertCircle, Clock, Plus, X, Edit, Trash2, Activity, Sparkles } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 
 const TicketDirectory = () => {
@@ -266,11 +266,10 @@ const TicketDirectory = () => {
   }
 
   return (
-    <div className="space-y-6 relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div className="dashboard-shell ticket-page-shell relative">
+      <section className="dashboard-hero ticket-page-hero"><div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/><div className="relative z-10 flex w-full flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Ticket Directory</h1>
-          <p className="text-gray-500 mt-1">Global view of all system tickets and operational status.</p>
+          <div className="eyebrow"><Sparkles size={14}/> Global workflow control</div><h1>Ticket directory.</h1><p>Search, assign, and manage every operational request from a single command view.</p>
         </div>
         
         <div className="flex gap-2 w-full md:w-auto">
@@ -288,15 +287,15 @@ const TicketDirectory = () => {
           </div>
           <button 
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+            className="hero-button"
           >
             <Plus size={16} />
             <span className="hidden md:inline">New Ticket</span>
           </button>
         </div>
-      </div>
+      </div></section>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="ticket-directory-panel">
         <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
             <tr>

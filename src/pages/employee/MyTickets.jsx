@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import useAxios from '../../hooks/useAxios';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
-import { Plus, Clock, X } from 'lucide-react';
+import { Plus, Clock, X, Sparkles } from 'lucide-react';
 
 const EmployeeTickets = () => {
   const api = useAxios();
@@ -142,30 +142,29 @@ const EmployeeTickets = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-end">
+    <div className="dashboard-shell ticket-page-shell">
+      <section className="dashboard-hero ticket-page-hero"><div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/><div className="relative z-10 flex w-full flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Team Tickets</h1>
-          <p className="text-gray-500 mt-1">View collective tasks, department requests, and collaborative items.</p>
+          <div className="eyebrow"><Sparkles size={14}/> Team workflow</div><h1>Turn requests into progress.</h1><p>View collective tasks, department requests, and the work moving across your team.</p>
         </div>
         
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+          className="hero-button"
         >
           <Plus size={18} />
           <span>New Ticket</span>
         </button>
-      </div>
+      </div></section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="ticket-card-grid">
         {tickets.length === 0 ? (
           <div className="col-span-full p-8 text-center bg-gray-50 dark:bg-[#1a1d27] rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 text-gray-500">
             No team tickets available. Create one to get started!
           </div>
         ) : (
           tickets.map(ticket => (
-            <div key={ticket.id} className="bg-white dark:bg-[#1a1d27] rounded-xl p-5 border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col h-full hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
+            <div key={ticket.id} className="workflow-ticket-card">
               <div className="flex justify-between items-start mb-3">
                 <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
                   {ticket.trackingNumber}

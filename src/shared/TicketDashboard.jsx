@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import useAxios from '../hooks/useAxios';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext'; 
-import { Plus, Trash2, Lock, X, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Lock, X, AlertTriangle, Sparkles } from 'lucide-react';
 import SLATimer from '../components/SLATimer';
 
 const TicketDashboard = () => {
@@ -200,23 +200,23 @@ const TicketDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-end">
+    <div className="dashboard-shell ticket-page-shell">
+      <section className="dashboard-hero ticket-page-hero"><div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/><div className="relative z-10 flex w-full flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+          <div className="eyebrow"><Sparkles size={14}/> Shared workflow</div><h1>
             {currentUser?.role === 'ADMIN' ? 'Ticket Directory' : 'Team Tickets'}
           </h1>
-          <p className="text-gray-500 mt-1">View all company tasks. You can only edit tasks assigned to you.</p>
+          <p>View company tasks, ownership, and live SLA health. Assigned work remains directly actionable.</p>
         </div>
         
         {currentUser?.role === 'ADMIN' && (
-          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-sm">
+          <button onClick={() => setIsModalOpen(true)} className="hero-button">
             <Plus size={18} /><span>New Ticket</span>
           </button>
         )}
-      </div>
+      </div></section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="ticket-card-grid">
         {tickets.length === 0 ? (
           <div className="col-span-full p-8 text-center bg-gray-50 dark:bg-[#1a1d27] rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 text-gray-500">
             No tickets found.
@@ -228,7 +228,7 @@ const TicketDashboard = () => {
             const assignedUser = ticket.assignee || ticket.assignedTo || users.find(u => u.id === ticket.assignedToId);
 
             return (
-              <div key={ticket.id} className={`bg-white dark:bg-[#1a1d27] rounded-xl p-5 border shadow-sm flex flex-col h-full relative overflow-hidden transition-all ${!hasAccess ? 'border-gray-200 dark:border-gray-800 opacity-90' : 'border-indigo-100 dark:border-indigo-900/30 hover:border-indigo-300 dark:hover:border-indigo-700'}`}>
+              <div key={ticket.id} className={`workflow-ticket-card ${!hasAccess ? 'read-only' : ''}`}>
                 {!hasAccess && (
                   <div className="absolute top-4 right-4 text-gray-300 dark:text-gray-600" title="Read Only"><Lock size={16} /></div>
                 )}

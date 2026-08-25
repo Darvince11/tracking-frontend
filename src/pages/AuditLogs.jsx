@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useAxios from '../hooks/useAxios';
 import { useNotification } from '../context/NotificationContext';
-import { Search, User, ChevronLeft, ChevronRight, LogIn, LogOut } from 'lucide-react';
+import { Search, User, ChevronLeft, ChevronRight, LogIn, LogOut, Sparkles, History, ShieldCheck, Activity } from 'lucide-react';
+
+const PAGE_SIZE = 10;
 
 const AuditLogs = () => {
   const api = useAxios();
@@ -14,6 +16,8 @@ const AuditLogs = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [paginationIssue, setPaginationIssue] = useState(false);
+  const pageSignatures = useRef(new Map());
   const [pagination, setPagination] = useState({
     total: 0,
     pages: 1,
@@ -27,6 +31,8 @@ const AuditLogs = () => {
       setDebouncedSearch(searchTerm);
       if (searchTerm !== debouncedSearch) {
         setCurrentPage(1);
+        pageSignatures.current.clear();
+        setPaginationIssue(false);
       }
     }, 500);
     return () => clearTimeout(timer);
@@ -41,7 +47,7 @@ const AuditLogs = () => {
         const response = await api.get('/api/admin/audit-logs', {
           params: {
             page: currentPage,
-            limit: 10,
+            limit: PAGE_SIZE,
             search: debouncedSearch || undefined
           }
         });
@@ -51,20 +57,30 @@ const AuditLogs = () => {
           const responseData = response.data?.data;
           const rawData = Array.isArray(responseData)
             ? responseData
-            : (responseData?.logs || response.data?.logs || []);
+            : (responseData?.logs || responseData?.auditLogs || responseData?.items || response.data?.logs || response.data?.auditLogs || []);
           
-          setLogs(Array.isArray(rawData) ? rawData : []);
+          const normalizedLogs = Array.isArray(rawData) ? rawData : [];
+          const signature = normalizedLogs.map((log) => log.id || `${log.createdAt}-${log.action}`).join('|');
+          const firstPageSignature = pageSignatures.current.get(1);
+          const repeatedFirstPage = currentPage > 1 && signature && signature === firstPageSignature;
+          pageSignatures.current.set(currentPage, signature);
+          setPaginationIssue(repeatedFirstPage);
+          setLogs(repeatedFirstPage ? [] : normalizedLogs);
           
           const pageData = response.data?.pagination || responseData?.pagination || response.data?.meta || responseData?.meta || {};
-          const total = Number(pageData.total ?? pageData.totalItems ?? pageData.count ?? rawData.length);
+          const explicitTotal = pageData.total ?? pageData.totalItems ?? pageData.count;
+          const total = explicitTotal == null ? ((currentPage - 1) * PAGE_SIZE) + normalizedLogs.length : Number(explicitTotal);
           const resolvedPage = Number(pageData.currentPage ?? pageData.page ?? currentPage) || currentPage;
           const serverHasNext = pageData.hasNext ?? pageData.hasNextPage;
-          const pages = Math.max(1, Number(pageData.pages ?? pageData.totalPages ?? Math.ceil(total / 10)) || 1, serverHasNext ? resolvedPage + 1 : resolvedPage);
+          const fallbackHasNext = normalizedLogs.length === PAGE_SIZE;
+          const hasNext = repeatedFirstPage ? false : (serverHasNext ?? (pageData.pages != null || pageData.totalPages != null ? resolvedPage < Number(pageData.pages ?? pageData.totalPages) : fallbackHasNext));
+          const pages = Math.max(1, Number(pageData.pages ?? pageData.totalPages ?? (explicitTotal != null ? Math.ceil(total / PAGE_SIZE) : resolvedPage + (hasNext ? 1 : 0))) || 1);
           setPagination({
             total,
             pages,
-            hasNext: pageData.hasNext ?? pageData.hasNextPage ?? resolvedPage < pages,
-            hasPrev: pageData.hasPrev ?? pageData.hasPreviousPage ?? resolvedPage > 1,
+            totalKnown: explicitTotal != null,
+            hasNext,
+            hasPrev: resolvedPage > 1,
           });
         }
       } catch (error) {
@@ -97,16 +113,17 @@ const AuditLogs = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Audit Logs</h1>
-        <p className="text-gray-500 mt-1">Track user logins, logouts, and system-wide modifications.</p>
-      </div>
+    <div className="dashboard-shell audit-shell">
+      <section className="dashboard-hero audit-hero"><div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/><div className="relative z-10"><div className="eyebrow"><Sparkles size={14}/> Security and accountability</div><h1>Every action, clearly recorded.</h1><p>Trace access, changes, and system activity through a dependable operational history.</p></div></section>
 
-      <div className="bg-white dark:bg-[#1a1d27] rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 space-y-6">
+      <section className="audit-summary"><div><History size={18}/><span>Current page<strong>{currentPage}</strong></span></div><div><Activity size={18}/><span>Visible events<strong>{logs.length}</strong></span></div><div><ShieldCheck size={18}/><span>Audit status<strong>{paginationIssue ? 'Check API' : 'Healthy'}</strong></span></div></section>
+
+      {paginationIssue && <div className="audit-pagination-warning"><ShieldCheck size={18}/><div><strong>The backend returned page 1 again.</strong><p>The frontend sent page={currentPage}, but received the same records. The audit endpoint must apply page and limit when querying the database.</p></div></div>}
+
+      <div className="audit-log-panel">
         
         {/* Search Input */}
-        <div className="flex items-center gap-3 bg-gray-50 dark:bg-[#13151c] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 max-w-md">
+        <div className="audit-search">
           <Search size={18} className="text-gray-400" />
           <input 
             type="text"
@@ -209,7 +226,7 @@ const AuditLogs = () => {
 
         <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800/60 pt-4 mt-2">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Showing <span className="font-semibold text-gray-900 dark:text-white">{logs.length > 0 ? ((currentPage - 1) * 10) + 1 : 0}</span> to <span className="font-semibold text-gray-900 dark:text-white">{Math.min(currentPage * 10, pagination.total)}</span> of <span className="font-semibold text-gray-900 dark:text-white">{pagination.total}</span> entries
+            Showing <span className="font-semibold text-gray-900 dark:text-white">{logs.length > 0 ? ((currentPage - 1) * PAGE_SIZE) + 1 : 0}</span> to <span className="font-semibold text-gray-900 dark:text-white">{logs.length > 0 ? ((currentPage - 1) * PAGE_SIZE) + logs.length : 0}</span>{pagination.totalKnown && <> of <span className="font-semibold text-gray-900 dark:text-white">{pagination.total}</span> entries</>}
           </p>
           
           <div className="flex gap-2">
@@ -225,8 +242,8 @@ const AuditLogs = () => {
               {currentPage} / {pagination.pages}
             </span>
             <button 
-              onClick={() => setCurrentPage(prev => Math.min(pagination.pages, prev + 1))}
-              disabled={loading || currentPage >= pagination.pages}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={loading || !pagination.hasNext}
               className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#13151c] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Next

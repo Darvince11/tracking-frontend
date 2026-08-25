@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import useAxios from '../../hooks/useAxios';
 import { useNotification } from '../../context/NotificationContext';
-import { Search, FileText, Users } from 'lucide-react';
+import { Search, FileText, Users, Sparkles, BookOpen } from 'lucide-react';
 
 const AdminJournal = () => {
   const api = useAxios();
@@ -48,15 +48,15 @@ const AdminJournal = () => {
       return userName.includes(query) || ticketRef.includes(query) || content.includes(query);
     });
   }, [entries, searchTerm]);
+  const employeeCount = new Set(entries.map((entry) => entry.user?.id).filter(Boolean)).size;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Employee Journal Oversight</h1>
-        <p className="text-gray-500 mt-1">See what employees entered in their daily journal and follow up on key updates.</p>
-      </div>
+    <div className="dashboard-shell admin-journal-shell">
+      <section className="dashboard-hero admin-journal-hero"><div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/><div className="relative z-10"><div className="eyebrow"><Sparkles size={14}/> Team narrative</div><h1>Employee journal oversight.</h1><p>See the story behind delivery—progress, decisions, blockers, and updates recorded by your team.</p></div></section>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-[#1a1d27]">
+      <section className="journal-summary"><div><BookOpen size={18}/><span>Total updates<strong>{entries.length}</strong></span></div><div><Users size={18}/><span>Contributors<strong>{employeeCount}</strong></span></div></section>
+
+      <div className="admin-journal-search">
         <div className="relative max-w-md">
           <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -68,7 +68,7 @@ const AdminJournal = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-[#1a1d27]">
+      <div className="admin-journal-feed">
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((item) => (
@@ -82,7 +82,7 @@ const AdminJournal = () => {
         ) : (
           <div className="space-y-4">
             {filteredEntries.map((entry) => (
-              <div key={entry.id} className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/40">
+              <div key={entry.id} className="admin-journal-entry">
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Users size={16} className="text-indigo-500" />
