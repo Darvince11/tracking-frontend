@@ -49,13 +49,23 @@ const AuditLogs = () => {
         if (isMounted) {
           // ✅ FIX: Safely extracts the array whether it's sent directly or nested inside a 'logs' object
           const responseData = response.data?.data;
-          const rawData = Array.isArray(responseData) ? responseData : (responseData?.logs || []);
+          const rawData = Array.isArray(responseData)
+            ? responseData
+            : (responseData?.logs || response.data?.logs || []);
           
           setLogs(Array.isArray(rawData) ? rawData : []);
           
-          if (response.data?.pagination) {
-            setPagination(response.data.pagination);
-          }
+          const pageData = response.data?.pagination || responseData?.pagination || response.data?.meta || responseData?.meta || {};
+          const total = Number(pageData.total ?? pageData.totalItems ?? pageData.count ?? rawData.length);
+          const resolvedPage = Number(pageData.currentPage ?? pageData.page ?? currentPage) || currentPage;
+          const serverHasNext = pageData.hasNext ?? pageData.hasNextPage;
+          const pages = Math.max(1, Number(pageData.pages ?? pageData.totalPages ?? Math.ceil(total / 10)) || 1, serverHasNext ? resolvedPage + 1 : resolvedPage);
+          setPagination({
+            total,
+            pages,
+            hasNext: pageData.hasNext ?? pageData.hasNextPage ?? resolvedPage < pages,
+            hasPrev: pageData.hasPrev ?? pageData.hasPreviousPage ?? resolvedPage > 1,
+          });
         }
       } catch (error) {
         console.error("Failed to fetch audit logs", error);
@@ -204,16 +214,19 @@ const AuditLogs = () => {
           
           <div className="flex gap-2">
             <button 
-              onClick={() => setCurrentPage(prev => prev - 1)}
-              disabled={!pagination.hasPrev}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={loading || currentPage <= 1}
               className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#13151c] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={16} />
               Previous
             </button>
+            <span className="grid min-w-20 place-items-center px-2 text-xs font-bold text-gray-500 dark:text-gray-400">
+              {currentPage} / {pagination.pages}
+            </span>
             <button 
-              onClick={() => setCurrentPage(prev => prev + 1)}
-              disabled={!pagination.hasNext}
+              onClick={() => setCurrentPage(prev => Math.min(pagination.pages, prev + 1))}
+              disabled={loading || currentPage >= pagination.pages}
               className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#13151c] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Next
