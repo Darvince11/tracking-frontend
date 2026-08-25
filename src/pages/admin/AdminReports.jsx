@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import useAxios from "../../hooks/useAxios";
 import { useNotification } from "../../context/NotificationContext";
-import { BarChart3, Calendar, CheckCircle2, PlusCircle, Users, RefreshCw, Printer, Activity, FileText, Clock, UserCheck } from 'lucide-react';
+import { BarChart3, Calendar, CheckCircle2, PlusCircle, Users, RefreshCw, Printer, Activity, FileText, Clock, UserCheck, Sparkles, AlertTriangle, Target } from 'lucide-react';
 
 const AdminReports = () => {
   const api = useAxios();
@@ -59,7 +59,7 @@ const AdminReports = () => {
   }
 
   const metrics = report?.metrics || { ticketsCompleted: 0, newTicketsCreated: 0, uniqueActiveUsers: 0 };
-  const activities = report?.activities || report?.tickets || [];
+  const activities = report?.activities || report?.tickets || report?.auditLogs || report?.logs || [];
 
   // =========================================================
   // DYNAMIC EMPLOYEE PERFORMANCE AGGREGATOR
@@ -97,25 +97,37 @@ const AdminReports = () => {
 
   // Convert map to sorted array (Most completed first)
   const employeeBreakdown = Object.values(employeeStatsMap).sort((a, b) => b.completed - a.completed);
+  const countBy = (key, fallback = 'UNSPECIFIED') => activities.reduce((counts, activity) => {
+    const value = String(activity[key] || fallback).toUpperCase().replaceAll('_', ' ');
+    counts[value] = (counts[value] || 0) + 1;
+    return counts;
+  }, {});
+  const statusBreakdown = countBy('status', 'UPDATED');
+  const priorityBreakdown = countBy('priority');
+  const departmentBreakdown = countBy('department');
+  const completedCount = activities.filter((activity) => ['COMPLETED', 'DONE'].includes(String(activity.status || '').toUpperCase())).length;
+  const attentionCount = activities.filter((activity) => ['BLOCKED', 'OVERDUE'].includes(String(activity.status || '').toUpperCase()) || String(activity.priority || '').toUpperCase() === 'URGENT').length;
+  const completionRate = activities.length ? Math.round((completedCount / activities.length) * 100) : 0;
 
 
   return (
-    <div className="space-y-6">
+    <div className="dashboard-shell report-shell">
       
       {/* HEADER & CONTROLS */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 print:hidden">
+      <section className="dashboard-hero report-hero print:hidden"><div className="hero-orb hero-orb-one"/><div className="hero-orb hero-orb-two"/><div className="relative z-10 flex w-full flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Performance Reports</h1>
-          <p className="text-gray-500 mt-1">Analyze operational metrics, task completions, and user activity.</p>
+          <div className="eyebrow"><Sparkles size={14}/> Operational intelligence</div>
+          <h1>Comprehensive reports.</h1>
+          <p>Review delivery, workload, employee performance, and every recorded operation within the selected timeframe.</p>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-2 bg-white dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2 shadow-sm">
-            <Calendar size={16} className="text-gray-400" />
+        <div className="report-controls">
+          <div className="report-period-control">
+            <Calendar size={16} />
             <select 
               value={timeInterval}
               onChange={(e) => setTimeInterval(e.target.value)}
-              className="bg-transparent border-none outline-none text-sm text-gray-900 dark:text-white cursor-pointer"
+              className="bg-transparent border-none outline-none text-sm text-white cursor-pointer"
             >
               <option className="bg-white dark:bg-gray-800" value="DAILY">Daily (24h)</option>
               <option className="bg-white dark:bg-gray-800" value="WEEKLY">Weekly (7 Days)</option>
@@ -126,7 +138,7 @@ const AdminReports = () => {
           <button 
             onClick={() => fetchReport(true)}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors shadow-sm disabled:opacity-50"
+            className="glass-button"
           >
             <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
             <span>Refresh</span>
@@ -134,20 +146,20 @@ const AdminReports = () => {
 
           <button 
             onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700 text-white rounded-xl font-medium transition-colors shadow-sm"
+            className="hero-button"
           >
             <Printer size={16} />
             <span>Print Report</span>
           </button>
         </div>
-      </div>
+      </div></section>
 
       {/* PRINTABLE REPORT DOCUMENT CONTAINER */}
       <div className="relative overflow-hidden bg-white dark:bg-[#1a1d27] rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 md:p-8 space-y-6 print:border-none print:shadow-none print:p-0 print:bg-white print:text-black">
         
         {/* Background Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
-          <span className="text-6xl md:text-9xl font-black text-gray-900/[0.03] dark:text-white/[0.03] print:text-gray-900/[0.05] tracking-widest uppercase rotate--12">
+          <span className="text-6xl md:text-9xl font-black text-gray-900/[0.03] dark:text-white/[0.03] print:text-gray-900/[0.05] tracking-widest uppercase -rotate-12">
             NEXORATEL
           </span>
         </div>
@@ -222,6 +234,19 @@ const AdminReports = () => {
             </div>
           </div>
         </div>
+
+        <section className="report-overview-grid relative z-10">
+          <ReportInsight icon={Activity} label="Recorded operations" value={activities.length} note="Items returned for this period" tone="violet" />
+          <ReportInsight icon={Target} label="Completion rate" value={`${completionRate}%`} note={`${completedCount} completed operations`} tone="green" />
+          <ReportInsight icon={AlertTriangle} label="Needs attention" value={attentionCount} note="Blocked, overdue, or urgent" tone="orange" />
+          <ReportInsight icon={Users} label="People represented" value={employeeBreakdown.filter((employee) => employee.name !== 'Unassigned').length} note="With recorded workload" tone="blue" />
+        </section>
+
+        <section className="report-breakdown-grid relative z-10">
+          <Breakdown title="Status distribution" data={statusBreakdown} />
+          <Breakdown title="Priority distribution" data={priorityBreakdown} />
+          <Breakdown title="Department activity" data={departmentBreakdown} />
+        </section>
 
         {/* ========================================================= */}
         {/* NEW: EMPLOYEE PERFORMANCE BREAKDOWN                         */}
@@ -325,6 +350,16 @@ const AdminReports = () => {
       </div>
     </div>
   );
+};
+
+const ReportInsight = ({ icon: Icon, label, value, note, tone }) => (
+  <article className={`metric-card tone-${tone} print:border-gray-300 print:shadow-none`}><div className="metric-icon"><Icon size={21}/></div><div><span>{label}</span><strong>{value}</strong><small>{note}</small></div></article>
+);
+
+const Breakdown = ({ title, data }) => {
+  const entries = Object.entries(data).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((sum, [, value]) => sum + value, 0);
+  return <article className="report-breakdown"><div className="panel-heading"><div><span className="panel-kicker">Breakdown</span><h2>{title}</h2></div></div><div className="report-breakdown-list">{entries.length === 0 ? <p>No data recorded.</p> : entries.map(([label, value]) => <div key={label}><div><span>{label}</span><strong>{value}</strong></div><i><b style={{width:`${total ? (value / total) * 100 : 0}%`}}/></i></div>)}</div></article>;
 };
 
 export default AdminReports;
