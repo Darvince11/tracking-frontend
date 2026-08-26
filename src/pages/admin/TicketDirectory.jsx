@@ -125,12 +125,14 @@ const TicketDirectory = () => {
     
     try {
       const payload = {
-        status: activeTicket.status,
-        priority: activeTicket.priority,
-        assignedToId: activeTicket.assignedToId ? activeTicket.assignedToId : null
+        status: activeTicket.status
       };
 
-      await api.patch(`/api/admin/tickets/${activeTicket.id}`, payload);
+      if (activeTicket.assignedToId !== activeTicket.originalAssignedToId) {
+        payload.assignedToId = activeTicket.assignedToId || null;
+      }
+
+      await api.patch(`/api/admin/tickets/${activeTicket.id || activeTicket._id}`, payload);
       
       setIsManageModalOpen(false);
       fetchTickets();
@@ -144,9 +146,11 @@ const TicketDirectory = () => {
   };
 
   const openManageModal = (ticket) => {
+    const assignedToId = ticket.assignedToId || ticket.assignee?.id || ticket.assignee?._id || '';
     setActiveTicket({ 
       ...ticket,
-      assignedToId: ticket.assignee?.id || ''
+      assignedToId,
+      originalAssignedToId: assignedToId
     });
     setIsManageModalOpen(true);
   };

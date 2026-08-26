@@ -114,13 +114,31 @@ const TicketDashboard = () => {
     }));
 
     try {
-      // FIXED: Backend handles role checks securely; all updates hit /api/tickets/:id
-      await api.patch(`/api/tickets/${ticketId}`, { status: newStatus });
+      const updateEndpoint = currentUser?.role === 'ADMIN'
+        ? `/api/admin/tickets/${ticketId}`
+        : `/api/tickets/${ticketId}`;
+
+      const response = await api.patch(updateEndpoint, { status: newStatus });
+      const savedTicket = response.data?.data?.ticket || response.data?.data || response.data?.ticket;
+
+      if (savedTicket?.id || savedTicket?._id) {
+        setTickets(prev => prev.map(ticket =>
+          (ticket.id || ticket._id) === (savedTicket.id || savedTicket._id)
+            ? { ...ticket, ...savedTicket }
+            : ticket
+        ));
+      }
       showNotification("Ticket status updated", "success");
     } catch (error) {
       setTickets(previousTickets); 
       console.error("Status update error:", error);
-      showNotification("Failed to update status", "error");
+      const backendMessage = error.response?.data?.message
+        || error.response?.data?.error
+        || error.response?.data?.errors?.map?.(item => item.message || item.msg).filter(Boolean).join(', ')
+        || (error.response
+          ? `The server rejected this update (${error.response.status}).`
+          : 'Could not reach the backend.');
+      showNotification(`Failed to update status: ${backendMessage}`, "error");
     }
   };
 
